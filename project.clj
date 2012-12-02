@@ -5,7 +5,7 @@
             :url "http://www.apache.org/licenses/LICENSE-2.0.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]]
   :plugins [[lein-cljsbuild "0.2.9"]
-            [org.bodil/lein-noderepl "0.1.1"]]
+            [org.bodil/lein-noderepl "0.1.2"]]
   :cljsbuild {:builds
               [{:source-path "src"
                 :compiler
