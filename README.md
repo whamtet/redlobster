@@ -214,7 +214,7 @@ let's rewrite the chaining example above using this technique.
 
     (def fs (js/require "fs"))
 
-    (defer-node (.readFile fs "/tmp/filename-inside.txt)
+    (defer-node (.readFile fs "/tmp/filename-inside.txt")
       (fn [result] (defer-node (.readFile fs result)
         (fn [result] (.write (.-stdout js/process) result)))))
 ```
