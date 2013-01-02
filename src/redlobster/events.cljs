@@ -37,6 +37,11 @@
     (name event)
     event))
 
+(defn- wrap-once [emitter event listener]
+  (fn once-off [x]
+    (listener x)
+    (remove-listener emitter event once-off)))
+
 (case emitter-type
   :node
   (extend-protocol IEventEmitter
@@ -62,7 +67,8 @@
    (on [emitter event listener]
      (.on emitter (unpack-event event) listener))
    (once [emitter event listener]
-     (throw "ace.lib.event_emitter.EventEmitter doesn't support the `once` method."))
+     (let [event (unpack-event event)]
+       (.on emitter event (wrap-once emitter event listener))))
    (remove-listener [emitter event listener]
      (.removeListener emitter (unpack-event event) listener))
    (remove-all-listeners [emitter]
