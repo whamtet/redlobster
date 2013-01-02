@@ -4,7 +4,7 @@
             [redlobster.events :as e])
   (:use [cljs.node :only [log]]
         [cljs.yunoincore :only [clj->js]])
-  (:use-macros [redlobster.macros :only [promise]]))
+  (:use-macros [redlobster.macros :only [promise when-realised]]))
 
 (n/require "stream" Stream)
 (n/require "fs" [createReadStream createWriteStream])
@@ -25,6 +25,9 @@
   (end [this data encoding])
   (destroy-soon [this]))
 
+(defn stream? [v]
+  (satisfies? IStream v))
+
 (extend-protocol IStream
   Stream
   (readable? [this] (.-readable this))
@@ -42,10 +45,10 @@
   (end [this data encoding] (.end this data encoding))
   (destroy-soon [this] (.destroySoon this)))
 
-(defn slurp [path]
+(defn read-file [path]
   (createReadStream path))
 
-(defn spit [path]
+(defn write-file [path]
   (createWriteStream path))
 
 (defn- append-data [current data encoding]
@@ -63,3 +66,24 @@
            (fn [data]
              (swap! content append-data data encoding)))
      (e/on stream :end #(realise @content)))))
+
+(defn write-stream [stream data & [encoding]]
+  (promise
+   (e/on stream :close #(realise nil))
+   (e/on stream :error #(realise-error %))
+   (cond
+    (stream? data) (.pipe data stream)
+    (instance? js/Buffer data)
+    (do
+      (.write stream data)
+      (.end stream))
+    (string? data)
+    (do
+      (if encoding
+        (.write stream data encoding)
+        (.write stream data))
+      (.end stream))
+    :else
+    (do
+      (.end stream)
+      (realise-error :redlobster.stream/unknown-datatype)))))
