@@ -1,4 +1,4 @@
-(defproject org.bodil/redlobster "0.1.0"
+(defproject org.bodil/redlobster "0.2.0"
   :description "Promises for Node"
   :url "https://github.com/bodil/redlobster"
   :license {:name "Apache License, version 2.0"
