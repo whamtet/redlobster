@@ -35,7 +35,7 @@
         (doto ee
           (aset "__realised" "success")
           (aset "__value" value)
-          (e/emit :realise-success [value])))))
+          (e/emit :realise-success value)))))
   (realise-error [this value]
     (if (realised? this)
       (throw :redlobster.promise/already-realised)
@@ -46,7 +46,7 @@
         (doto ee
           (aset "__realised" "error")
           (aset "__value" value)
-          (e/emit :realise-error [value])))))
+          (e/emit :realise-error value)))))
   (on-realised [this on-success on-error]
     (if (realised? this)
       (if (failed? this) (on-error @this) (on-success @this))

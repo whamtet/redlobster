@@ -8,7 +8,7 @@
     (catch js/Error e
       (try
         ;; Try Ace's EventEmitter using RequireJS
-        (let [ace-emitter (js/require "ace/lib/event")
+        (let [ace-emitter (.-EventEmitter (js/require "ace/lib/event_emitter"))
               emitter (fn [])]
           (aset emitter "prototype" ace-emitter)
           {:emitter emitter
@@ -76,6 +76,6 @@
    (remove-all-listeners [emitter event]
      (.removeAllListeners emitter (unpack-event event)))
    (listeners [emitter event]
-     (throw "ace.lib.event_emitter.EventEmitter doesn't support the `once` method."))
+     (throw "ace.lib.event_emitter.EventEmitter doesn't support the `listeners` method."))
   (emit [emitter event data]
     (._emit emitter (unpack-event event) data))))

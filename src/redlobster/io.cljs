@@ -35,7 +35,7 @@
   (cond
    (http-url? path) (slurp-http path)
    (file-url? path) (slurp-file path)
-   :else (promise-fail {:redlobster.io/unknown-path path})))
+   :else (p/promise-fail {:redlobster.io/unknown-path path})))
 
 (defn- http-success? [res]
   (let [status (.-statusCode res)]
@@ -58,4 +58,4 @@
   (cond
    (http-url? path) (spit-http path data)
    (file-url? path) (spit-file path data)
-   :else (promise-fail {:redlobster.io/unknown-path path})))
+   :else (p/promise-fail {:redlobster.io/unknown-path path})))
