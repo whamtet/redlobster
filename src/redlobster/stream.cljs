@@ -2,8 +2,7 @@
   (:require-macros [cljs.node-macros :as n])
   (:require [redlobster.promise :as p]
             [redlobster.events :as e])
-  (:use [cljs.node :only [log]]
-        [cljs.yunoincore :only [clj->js]])
+  (:use [cljs.node :only [log]])
   (:use-macros [redlobster.macros :only [promise when-realised]]))
 
 (n/require "stream" Stream)

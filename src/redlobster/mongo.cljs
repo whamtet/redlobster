@@ -1,5 +1,4 @@
 (ns redlobster.mongo
-  (:use [cljs.yunoincore :only [clj->js]])
   (:use-macros [redlobster.macros :only [defer-node]])
   (:require [redlobster.promise :as p]
             [cljs.node :as node]))

@@ -3,8 +3,7 @@
   (:require [redlobster.events :as e]
             [redlobster.promise :as p]
             [redlobster.stream :as s])
-  (:use [cljs.node :only [log]]
-        [cljs.yunoincore :only [clj->js]])
+  (:use [cljs.node :only [log]])
   (:use-macros [redlobster.macros :only [promise let-realised]]))
 
 (n/require "http" http)
