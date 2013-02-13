@@ -24,7 +24,7 @@
   (realised? [this]
     (if (nil? (.-__realised ee)) false true))
   (failed? [this]
-    (and (realised? this) (= "error" (.-__realised ee))))
+    (and (realised? this) (= :error (.-__realised ee))))
   (realise [this value]
     (if (realised? this)
       (throw :redlobster.promise/already-realised)
@@ -32,10 +32,10 @@
         (on-realised value
                      #(realise this %)
                      #(realise-error this %))
-        (doto ee
-          (aset "__realised" "success")
-          (aset "__value" value)
-          (e/emit :realise-success value)))))
+        (do
+          (set! (.-__realised ee) :success)
+          (set! (.-__value ee) value)
+          (e/emit ee :realise-success value)))))
   (realise-error [this value]
     (if (realised? this)
       (throw :redlobster.promise/already-realised)
@@ -43,10 +43,10 @@
         (on-realised value
                      #(realise this %)
                      #(realise-error this %))
-        (doto ee
-          (aset "__realised" "error")
-          (aset "__value" value)
-          (e/emit :realise-error value)))))
+        (do
+          (set! (.-__realised ee) :error)
+          (set! (.-__value ee) value)
+          (e/emit ee :realise-error value)))))
   (on-realised [this on-success on-error]
     (if (realised? this)
       (if (failed? this) (on-error @this) (on-success @this))
@@ -57,9 +57,10 @@
 (defn promise
   ([]
      (Promise.
-      (doto (e/event-emitter)
-        (aset "__realised" nil)
-        (aset "__value" nil))))
+      (let [ee (e/event-emitter)]
+        (set! (.-__realised ee) nil)
+        (set! (.-__value ee) nil)
+        ee)))
   ([success-value]
      (doto (promise)
        (realise success-value))))

@@ -10,7 +10,7 @@
         ;; Try Ace's EventEmitter using RequireJS
         (let [ace-emitter (.-EventEmitter (js/require "ace/lib/event_emitter"))
               emitter (fn [])]
-          (aset emitter "prototype" ace-emitter)
+          (set! (.-prototype emitter) ace-emitter)
           {:emitter emitter
            :type :ace})
         (catch js/Error e

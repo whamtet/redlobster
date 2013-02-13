@@ -43,7 +43,7 @@
 
 (defn- spit-http [path data]
   (let [o (parse-url path)]
-    (aset path "method" "PUT")
+    (set! (.-method path) "PUT")
     (waitp (http/request o data)
            #(if (http-success? %)
               (realise nil)
