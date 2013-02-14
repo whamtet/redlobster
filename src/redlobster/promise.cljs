@@ -100,3 +100,13 @@ failing promise."
                  (fn [_] (realise p (callback)))
                  (fn [error] (realise-error p error)))
     p))
+
+(defn on-event
+  "Creates a promise that fulfills with an event object when the matching
+event is triggered on the EventEmitter. This promise cannot fail; it will
+either succeed or never realise."
+  [ee type]
+  (let [p (promise)]
+    (e/once ee type
+          (fn [event] (realise p event)))
+    p))
