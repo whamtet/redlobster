@@ -7,7 +7,7 @@ number of milliseconds have elapsed."
   [& forms]
   (if (number? (first forms))
     `(js/setTimeout (fn [] ~@(rest forms)) ~(first forms))
-    `(.nextTick js/process (fn [] ~@forms))))
+    `(js/setTimeout (fn [] ~@forms) 0)))
 
 (defmacro promise
   "Return a promise that will be realised by the given forms. The functions
