@@ -6,10 +6,18 @@
   :dependencies [[org.clojure/clojure "1.4.0"]]
   :plugins [[lein-cljsbuild "0.3.0"]
             [org.bodil/lein-noderepl "0.1.5"]]
-  :cljsbuild {:builds
-              [{:source-paths ["src"]
-                :compiler
-                {:output-to "js/main.js"
-                 :output-dir "js"
-                 :optimizations :simple
-                 :jar true}}]})
+  :cljsbuild {:test-commands
+              {"phantom" ["phantomjs" "test/phantom/test.js"]
+               "node" ["node" "js/test.js"]
+               "nashorn" ["jjs" "js/test.js"]}
+              :builds {:dev {:source-paths ["src"]
+                             :compiler
+                             {:output-to "js/main.js"
+                              :optimizations :simple
+                              :pretty-print true
+                              :jar true}}
+                       :test {:source-paths ["test"]
+                              :compiler
+                              {:output-to "js/test.js"
+                               :optimizations :simple
+                               :pretty-print true}}}})
