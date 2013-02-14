@@ -1,27 +1,6 @@
 (ns redlobster.events)
 
-(defn- detect-implementation []
-  (try
-    ;; Try Node's EventEmitter
-    {:emitter (.-EventEmitter (js/require "events"))
-     :type :node}
-    (catch js/Error e
-      (try
-        ;; Try Ace's EventEmitter using RequireJS
-        (let [ace-emitter (.-EventEmitter (js/require "ace/lib/event_emitter"))
-              emitter (fn [])]
-          (set! (.-prototype emitter) ace-emitter)
-          {:emitter emitter
-           :type :ace})
-        (catch js/Error e
-          (throw (js/Error. "No supported EventEmitter found")))))))
-
-(let [emitter (detect-implementation)]
-  (def EventEmitter (:emitter emitter))
-  (def emitter-type (:type emitter)))
-
-(defn event-emitter []
-  (EventEmitter.))
+;; Protocol
 
 (defprotocol IEventEmitter
   (on [emitter event listener])
@@ -32,50 +11,89 @@
   (listeners [emitter event])
   (emit [emitter event data]))
 
-(defn- unpack-event [event]
+;; Utility functions
+
+(defn unpack-event [event]
   (if (keyword? event)
     (name event)
     event))
 
-(defn- wrap-once [emitter event listener]
+(defn wrap-once [emitter event listener]
   (fn once-off [x]
     (listener x)
     (remove-listener emitter event once-off)))
 
-(case emitter-type
-  :node
-  (extend-protocol IEventEmitter
-   EventEmitter
-   (on [emitter event listener]
-     (.on emitter (unpack-event event) listener))
-   (once [emitter event listener]
-     (.once emitter (unpack-event event) listener))
-   (remove-listener [emitter event listener]
-     (.removeListener emitter (unpack-event event) listener))
-   (remove-all-listeners [emitter]
-     (.removeAllListeners emitter))
-   (remove-all-listeners [emitter event]
-     (.removeAllListeners emitter (unpack-event event)))
-   (listeners [emitter event]
-     (js->clj (.listeners emitter (unpack-event event))))
-   (emit [emitter event data]
-     (.emit emitter (unpack-event event) data)))
+;; Default implementation
 
-  :ace
-  (extend-protocol IEventEmitter
-   EventEmitter
-   (on [emitter event listener]
-     (.on emitter (unpack-event event) listener))
-   (once [emitter event listener]
-     (let [event (unpack-event event)]
-       (.on emitter event (wrap-once emitter event listener))))
-   (remove-listener [emitter event listener]
-     (.removeListener emitter (unpack-event event) listener))
-   (remove-all-listeners [emitter]
-     (throw "ace.lib.event_emitter.EventEmitter doesn't support the `remove-all-listeners` method without an event argument."))
-   (remove-all-listeners [emitter event]
-     (.removeAllListeners emitter (unpack-event event)))
-   (listeners [emitter event]
-     (throw "ace.lib.event_emitter.EventEmitter doesn't support the `listeners` method."))
-  (emit [emitter event data]
-    (._emit emitter (unpack-event event) data))))
+(defn- def-add-listener [type listener]
+  (fn [this]
+    (let [listeners (or (get this type) #{})]
+      (assoc this type (conj listeners listener)))))
+
+(defn- def-rem-listener [type listener]
+  (fn [this]
+    (let [listeners (or (get this type) #{})]
+      (assoc this type (disj listeners listener)))))
+
+(deftype DefaultEventEmitter [events]
+  IEventEmitter
+  (on [this event listener]
+    (swap! events (def-add-listener event listener)))
+  (once [this event listener]
+    (set! (.-__redlobster_event_once listener) true)
+    (swap! events (def-add-listener event listener)))
+  (remove-listener [this event listener]
+    (swap! events (def-rem-listener event listener)))
+  (remove-all-listeners [this]
+    (reset! events {}))
+  (remove-all-listeners [this event]
+    (swap! events #(dissoc % event)))
+  (listeners [this event]
+    (get @events event))
+  (emit [this event data]
+    (doseq [listener (listeners this event)]
+      (listener data)
+      (when (.-__redlobster_event_once listener)
+        (remove-listener this event listener)))))
+
+;; Implementations
+
+(def ^:private implementations
+  [(fn impl-node []
+     (try
+       (let [EventEmitter (.-EventEmitter (js/require "events"))]
+         {:constructor (fn [] (EventEmitter.))
+          :type :node
+          :init
+          (fn []
+            (extend-protocol IEventEmitter
+              EventEmitter
+              (on [emitter event listener]
+                (.on emitter (unpack-event event) listener))
+              (once [emitter event listener]
+                (.once emitter (unpack-event event) listener))
+              (remove-listener [emitter event listener]
+                (.removeListener emitter (unpack-event event) listener))
+              (remove-all-listeners [emitter]
+                (.removeAllListeners emitter))
+              (remove-all-listeners [emitter event]
+                (.removeAllListeners emitter (unpack-event event)))
+              (listeners [emitter event]
+                (js->clj (.listeners emitter (unpack-event event))))
+              (emit [emitter event data]
+                (.emit emitter (unpack-event event) data))))})
+       (catch js/Error e nil)))
+
+   (fn impl-default []
+     {:constructor (fn [] (DefaultEventEmitter. (atom {})))
+      :type :default
+      :init (fn [])})])
+
+;; Initialise the first available implementation
+
+(let [emitter (some #(%) implementations)]
+  (if (nil? emitter) (throw (js/Error. "No supported EventEmitter found"))
+      (do
+        (def event-emitter (:constructor emitter))
+        (def emitter-type (:type emitter))
+        ((:init emitter)))))
