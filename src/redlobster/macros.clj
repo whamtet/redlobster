@@ -1,4 +1,5 @@
-(ns redlobster.macros)
+(ns redlobster.macros
+  (:refer-clojure :exclude [promise await]))
 
 (defmacro defer
   "Run the given forms in the next tick of the event loop, or if the

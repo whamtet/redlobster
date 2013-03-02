@@ -1,4 +1,5 @@
-(ns cljs.node-macros)
+(ns cljs.node-macros
+  (:refer-clojure :exclude [require]))
 
 (defmacro require [path sym]
   (if (vector? sym)
