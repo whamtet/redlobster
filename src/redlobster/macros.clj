@@ -90,13 +90,3 @@ before it's realised. `js->clj` is a likely candidate."
         promise#))
   ([form]
      `(defer-node ~form identity)))
-
-(defmacro await
-  "Convenience macro for `redlobster.promise/on-realised`, which wraps
-the success and fail forms in functions, with the symbol `result`
-bound to the result of the promise."
-  [promise success fail]
-  `(redlobster.promise/on-realised
-    ~promise
-    (fn [~'result] ~success)
-    (fn [~'result] ~fail)))
