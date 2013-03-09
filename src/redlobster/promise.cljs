@@ -27,7 +27,8 @@
     (and (realised? this) (= :error (.-__realised ee))))
   (realise [this value]
     (if (realised? this)
-      (throw :redlobster.promise/already-realised)
+      (when-not (= :redlobster.promise/timeout @this)
+        (throw :redlobster.promise/already-realised))
       (if (promise? value)
         (on-realised value
                      #(realise this %)
@@ -38,7 +39,8 @@
           (e/emit ee :realise-success value)))))
   (realise-error [this value]
     (if (realised? this)
-      (throw :redlobster.promise/already-realised)
+      (when-not (= :redlobster.promise/timeout @this)
+        (throw :redlobster.promise/already-realised))
       (if (promise? value)
         (on-realised value
                      #(realise this %)
@@ -110,3 +112,15 @@ either succeed or never realise."
     (e/once ee type
           (fn [event] (realise p event)))
     p))
+
+(defn timeout
+  "Sets a promise to fail with `:redlobster.promise/timeout` after a
+specified number of milliseconds.
+
+A promise that has timed out will not throw an error when you try to
+realise it, but the realised value will remain
+`:redlobster.promise/timeout`."
+  [promise timeout]
+  (let [timeout-func #(when-not (realised? promise)
+                        (realise-error promise :redlobster.promise/timeout))]
+    (js/setTimeout timeout-func timeout)))
