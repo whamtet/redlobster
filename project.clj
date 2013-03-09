@@ -3,12 +3,13 @@
   :url "https://github.com/bodil/redlobster"
   :license {:name "Apache License, version 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0.html"}
-  :dependencies [[org.clojure/clojure "1.4.0"]]
-  :dev-dependencies [[org.bodil/cljs-noderepl "0.1.6"]
-                     [com.cemerick/piggieback "0.0.2"]]
-  :plugins [[lein-cljsbuild "0.3.0"]
-            [org.bodil/lein-noderepl "0.1.6"]]
-  :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+  :plugins [[lein-cljsbuild "0.3.0"]]
+  :profiles
+  {:dev
+   {:dependencies [[org.bodil/cljs-noderepl "0.1.6"]
+                   [com.cemerick/piggieback "0.0.2"]]
+    :plugins [[org.bodil/lein-noderepl "0.1.6"]]
+    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}}
   :cljsbuild {:test-commands
               {"phantom" ["phantomjs" "test/phantom/test.js"]
                "node" ["node" "js/test.js"]
