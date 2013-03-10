@@ -75,25 +75,32 @@
   "Takes a list of promises, and creates a promise that will realise as
 `:redlobster.promise/realised` when each promise has successfully realised,
 or if one or more of the promises fail, fail with the value of the first
-failing promise."
+failing promise.
+
+If the first argument is the keyword `:all`, then instead of failing when
+one of the promises fails, it will just wait for all promises to realise
+and realise itself with `:redlobster.promise/realised` regardless of the
+success or failure of any promise."
   [& promises]
-  (let [p (promise)
+  (let [await-all (= (first promises) :all)
+        promises (if await-all (rest promises) promises)
+        p (promise)
         total (count promises)
         count (atom 0)
         done (atom false)]
     (doseq [subp promises]
-      (on-realised
-       subp
-       (fn [_]
-         (when (not @done)
-           (swap! count inc)
-           (when (= total @count)
-             (reset! done true)
-             (realise p :redlobster.promise/realised))))
-       (fn [err]
-         (when (not @done)
-           (reset! done true)
-           (realise-error p err)))))
+      (let [succ (fn [_]
+                   (when (not @done)
+                     (swap! count inc)
+                     (when (= total @count)
+                       (reset! done true)
+                       (realise p :redlobster.promise/realised))))
+            fail (if await-all succ
+                     (fn [err]
+                       (when (not @done)
+                         (reset! done true)
+                         (realise-error p err))))]
+        (on-realised subp succ fail)))
     p))
 
 (defn defer-until-realised [promises callback]
