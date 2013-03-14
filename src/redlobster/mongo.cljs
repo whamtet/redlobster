@@ -13,7 +13,7 @@
 (defn connect
   ([host port db]
      (let [server (Server. host port)]
-       (defer-node (.open (Db. db server)))))
+       (defer-node (.open (Db. db server (clj->js {:journal true}))))))
   ([host db]
      (connect host 27017 db))
   ([db]
