@@ -66,6 +66,15 @@
              (swap! content append-data data encoding)))
      (e/on stream :end #(realise @content)))))
 
+(defn read-binary-stream [stream]
+  (promise
+   (let [arrays #js[]]
+     (e/on stream :error realise-error)
+     (e/on stream :data
+           (fn [data]
+             (.push arrays data)))
+     (e/on stream :end #(realise (js/Buffer.concat arrays))))))
+
 (defn write-stream [stream data & [encoding]]
   (promise
    (e/on stream :close #(realise nil))

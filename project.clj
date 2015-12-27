@@ -1,4 +1,4 @@
-(defproject org.bodil/redlobster "0.2.1"
+(defproject redlobster "0.2.2-SNAPSHOT"
   :description "Promises for ClojureScript"
   :url "https://github.com/bodil/redlobster"
   :license {:name "Apache License, version 2.0"
@@ -7,9 +7,13 @@
   :profiles
   {:dev
    {:dependencies [[org.bodil/cljs-noderepl "0.1.6"]
-                   [com.cemerick/piggieback "0.0.2"]]
+                   [com.cemerick/piggieback "0.0.2"]
+                   [org.clojure/clojurescript "1.7.170"]
+                   [org.clojure/clojure "1.7.0"]
+                   ]
     :plugins [[org.bodil/lein-noderepl "0.1.6"]]
-    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}}
+;    :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
+    }}
   :cljsbuild {:test-commands
               {"phantom" ["phantomjs" "test/phantom/test.js"]
                "node" ["node" "js/test.js"]
@@ -24,4 +28,6 @@
                               :compiler
                               {:output-to "js/test.js"
                                :optimizations :simple
-                               :pretty-print true}}}})
+                               :pretty-print true}}}}
+  :aliases {"build" ["trampoline" "run" "-m" "redlobster.build" "redlobster.io"]}
+  )

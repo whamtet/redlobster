@@ -2,7 +2,8 @@
   (:require-macros [cljs.node-macros :as n])
   (:require [redlobster.promise :as p]
             [redlobster.stream :as s]
-            [redlobster.http :as http])
+            [redlobster.http :as http]
+            )
   (:use [cljs.node :only [log]])
   (:use-macros [redlobster.macros :only [let-realised waitp]]))
 
@@ -34,6 +35,19 @@
   (cond
    (http-url? path) (slurp-http path)
    (file-url? path) (slurp-file path)
+   :else (p/promise-fail {:redlobster.io/unknown-path path})))
+
+(defn- binary-slurp-http [path]
+  (let-realised [res (http/request url)]
+                (s/read-binary-stream @res)))
+
+(defn- binary-slurp-file [path]
+  (s/read-binary-stream (s/read-file path)))
+
+(defn binary-slurp [path]
+  (cond
+   (http-url? path) (binary-slurp-http path)
+   (file-url? path) (binary-slurp-file path)
    :else (p/promise-fail {:redlobster.io/unknown-path path})))
 
 (defn- http-success? [res]
