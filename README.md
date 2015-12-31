@@ -221,7 +221,7 @@ let's rewrite the chaining example above using this technique.
 
 # License
 
-Copyright 2012 Bodil Stokke
+Copyright 2012 Bodil Stokke and Matthew Molloy
 
 Licensed under the Apache License, Version 2.0 (the "License"); you
 may not use this file except in compliance with the License. You may
