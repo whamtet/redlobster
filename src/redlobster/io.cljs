@@ -25,8 +25,9 @@
           (not (.-host p))))))
 
 (defn- slurp-http [path]
-  (let-realised [res (http/request url)]
-                (s/read-stream @res)))
+  (let-realised
+   [res (http/request path)]
+   (s/read-stream @res)))
 
 (defn- slurp-file [path]
   (s/read-stream (s/read-file path)))
