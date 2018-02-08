@@ -1,4 +1,4 @@
-(defproject redlobster "0.2.2-SNAPSHOT"
+(defproject redlobster "0.2.2"
   :description "Promises for ClojureScript"
   :url "https://github.com/bodil/redlobster"
   :license {:name "Apache License, version 2.0"
