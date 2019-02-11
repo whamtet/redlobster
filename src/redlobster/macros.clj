@@ -64,6 +64,28 @@ pairs instead of just a list of variables, and binds these to the macro scope."
        ~(vec (map first (partition 2 bindings)))
        (fn [] ~@forms))))
 
+(defmacro let-coll-realised
+  "Like `let-realised`, except that it takes a single binding that returns a
+  collection and waits for its elements to realise."
+  [[binding collection] & forms]
+  `(let [~binding ~collection]
+     (redlobster.promise/defer-until-realised
+       ~binding
+       (fn []
+         (let [~binding (map deref ~binding)]
+           ~@forms)))))
+
+(defmacro if-let-realised
+  [[binding value] success fail]
+  "Takes a binding form of a single promise and executes success or fail.
+  Success or fail need not be functions."
+  `(let [~binding ~value]
+     (redlobster.promise/on-realised
+      ~binding
+      (fn [_#] ~success)
+      (fn [_#] ~fail))
+     ~binding))
+
 (defmacro defer-node
   "Appends a callback to a given form which takes two arguments `[error value]`
 and executes it, returning a promise that will fail with `error` if `error`
