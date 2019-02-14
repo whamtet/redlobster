@@ -3,6 +3,7 @@
   (:require [redlobster.promise :as p]
             [redlobster.stream :as s]
             [redlobster.http :as http]
+            [redlobster.https :as https]
             )
   (:use [cljs.node :only [log]])
   (:use-macros [redlobster.macros :only [let-realised waitp]]))
@@ -14,6 +15,9 @@
 
 (defn http-url? [path]
   (= "http:" (.-protocol (parse-url path))))
+
+(defn https-url? [path]
+  (= "https:" (.-protocol (parse-url path))))
 
 (defn file-url? [path]
   (let [p (parse-url path)]
@@ -29,17 +33,27 @@
    [res (http/request path)]
    (s/read-stream @res)))
 
+(defn- slurp-https [path]
+  (let-realised
+   [res (https/request path)]
+   (s/read-stream @res)))
+
 (defn- slurp-file [path]
   (s/read-stream (s/read-file path)))
 
 (defn slurp [path]
   (cond
    (http-url? path) (slurp-http path)
+   (https-url? path) (slurp-https path)
    (file-url? path) (slurp-file path)
    :else (p/promise-fail {:redlobster.io/unknown-path path})))
 
 (defn- binary-slurp-http [path]
   (let-realised [res (http/request url)]
+                (s/read-binary-stream @res)))
+
+(defn- binary-slurp-https [path]
+  (let-realised [res (https/request url)]
                 (s/read-binary-stream @res)))
 
 (defn- binary-slurp-file [path]
@@ -48,6 +62,7 @@
 (defn binary-slurp [path]
   (cond
    (http-url? path) (binary-slurp-http path)
+   (https-url? path) (binary-slurp-https path)
    (file-url? path) (binary-slurp-file path)
    :else (p/promise-fail {:redlobster.io/unknown-path path})))
 
@@ -65,11 +80,21 @@
               (realise-error {:redlobster.http/status-code (.-statusCode %)}))
            #(realise-error %))))
 
+(defn- spit-https [path data]
+  (let [o (parse-url path)]
+    (set! (.-method path) "PUT")
+    (waitp (https/request o data)
+           #(if (http-success? %)
+              (realise nil)
+              (realise-error {:redlobster.http/status-code (.-statusCode %)}))
+           #(realise-error %))))
+
 (defn- spit-file [path data]
   (s/write-stream (s/write-file path) data))
 
 (defn spit [path data]
   (cond
    (http-url? path) (spit-http path data)
+   (https-url? path) (spit-https path data)
    (file-url? path) (spit-file path data)
    :else (p/promise-fail {:redlobster.io/unknown-path path})))
